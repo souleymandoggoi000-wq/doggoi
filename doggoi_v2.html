@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="DOGGOI Academic Solutions">
+<meta name="description" content="DOGGOI - Plateforme académique intelligente pour étudiants universitaires">
+<title>DOGGOI | Suite Académique Intelligente</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#1e3a5f;--primary-dark:#0f2b4a;--primary-deep:#071a2e;
+  --accent:#3b82f6;--accent-light:#93c5fd;
+  --success:#16a34a;--warning:#d97706;--danger:#dc2626;
+  --bg:#f0f4f8;--surface:#ffffff;--surface2:#f8fafc;
+  --text:#1e293b;--text2:#64748b;--text3:#94a3b8;
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --shadow:0 2px 12px rgba(30,58,95,.08);
+  --shadow-md:0 4px 24px rgba(30,58,95,.13);
+  --radius:16px;--radius-sm:10px;--radius-xs:8px;
+  --sidebar-w:270px;
+  --font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+body.dark{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1a2130;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --border:#2d3748;--border2:#374151;
+  --shadow:0 2px 12px rgba(0,0,0,.4);
+  --shadow-md:0 4px 24px rgba(0,0,0,.5);
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  position:fixed;left:0;top:0;height:100vh;width:var(--sidebar-w);
+  background:linear-gradient(180deg,var(--primary-dark) 0%,var(--primary-deep) 100%);
+  z-index:1000;display:flex;flex-direction:column;
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:4px 0 30px rgba(0,0,0,.2);overflow:hidden;
+}
+.sidebar.collapsed{transform:translateX(calc(-1 * var(--sidebar-w)))}
+.sidebar-header{padding:1.5rem 1.4rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-logo{display:flex;align-items:center;gap:12px}
+.logo-icon{
+  width:40px;height:40px;background:linear-gradient(135deg,#1e3a5f,#3b82f6);
+  border-radius:12px;display:flex;align-items:center;justify-content:center;
+  position:relative;flex-shrink:0;
+}
+.chad-flag{
+  position:absolute;bottom:-6px;right:-6px;width:18px;height:13px;
+  background:linear-gradient(90deg,#002664 33%,#FECB00 33%,#FECB00 66%,#C60C30 66%);
+  border-radius:3px;border:1px solid rgba(255,255,255,.4);
+}
+.logo-title{color:#fff;font-size:1.4rem;font-weight:700;letter-spacing:-.02em}
+.logo-sub{color:rgba(255,255,255,.45);font-size:.72rem;margin-top:2px}
+.sidebar-nav{flex:1;padding:1.2rem .9rem;overflow-y:auto}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:11px 14px;
+  margin-bottom:4px;border-radius:12px;
+  color:rgba(255,255,255,.6);cursor:pointer;font-size:.88rem;font-weight:500;
+  transition:all .2s;user-select:none;
+}
+.nav-item:hover{background:rgba(59,130,246,.15);color:rgba(255,255,255,.9);transform:translateX(4px)}
+.nav-item.active{background:rgba(59,130,246,.25);color:#93c5fd;border-left:3px solid #3b82f6}
+.nav-item i{width:18px;text-align:center;font-size:.9rem}
+.sidebar-footer{padding:1rem 1.4rem;border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.3);font-size:.72rem;text-align:center}
+
+/* ── TOGGLE BTN ── */
+.sidebar-toggle{
+  position:fixed;left:calc(var(--sidebar-w) + 12px);top:18px;z-index:1001;
+  background:var(--primary);border:none;width:38px;height:38px;
+  border-radius:10px;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:left .3s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 10px rgba(0,0,0,.25);
+}
+.sidebar-toggle.sb-collapsed{left:14px}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);transition:margin .3s cubic-bezier(.4,0,.2,1);padding:1.2rem 1.5rem;min-height:100vh}
+.main.expanded{margin-left:0}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:linear-gradient(135deg,var(--primary-dark),var(--primary-deep));
+  border-radius:var(--radius);padding:.85rem 1.4rem;margin-bottom:1.4rem;
+  color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;
+}
+.topbar-title{font-size:.95rem;font-weight:600}
+.topbar-sub{font-size:.75rem;color:rgba(255,255,255,.55);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.clock-badge{font-family:var(--mono);font-size:.78rem;background:rgba(255,255,255,.1);padding:4px 10px;border-radius:99px;color:rgba(255,255,255,.8)}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card-body{padding:1.3rem}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin-bottom:1.4rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;display:flex;align-items:center;gap:14px;transition:all .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.stat-icon.blue{background:#dbeafe;color:#1d4ed8}
+.stat-icon.green{background:#dcfce7;color:#15803d}
+.stat-icon.amber{background:#fef3c7;color:#b45309}
+.stat-icon.red{background:#fee2e2;color:#b91c1c}
+.dark .stat-icon.blue{background:#1e3a5f;color:#93c5fd}
+.dark .stat-icon.green{background:#14532d;color:#86efac}
+.dark .stat-icon.amber{background:#451a03;color:#fcd34d}
+.dark .stat-icon.red{background:#450a0a;color:#fca5a5}
+.stat-num{font-size:1.6rem;font-weight:700;line-height:1;color:var(--text)}
+.stat-label{font-size:.78rem;color:var(--text2);margin-top:3px}
+
+/* ── PAGE HEADING ── */
+.page-heading{margin-bottom:1.4rem}
+.page-heading h1{font-size:1.6rem;font-weight:700;color:var(--text)}
+.page-heading p{font-size:.85rem;color:var(--text2);margin-top:3px}
+
+/* ── BUTTONS ── */
+.btn-primary-doggoi{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:none;border-radius:99px;padding:.6rem 1.4rem;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:var(--font)}
+.btn-primary-doggoi:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(30,58,95,.35);color:#fff}
+.btn-primary-doggoi:active{transform:none}
+.btn-outline-doggoi{background:transparent;color:var(--primary);border:1.5px solid var(--primary);border-radius:99px;padding:.55rem 1.3rem;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:var(--font)}
+.btn-outline-doggoi:hover{background:var(--primary);color:#fff}
+
+/* ── FORMS ── */
+.form-field{border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface);color:var(--text);padding:.55rem .85rem;font-size:.88rem;font-family:var(--font);transition:border-color .2s,box-shadow .2s;width:100%}
+.form-field:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.dark .form-field{background:var(--surface2);border-color:var(--border);color:var(--text)}
+.form-field::placeholder{color:var(--text3)}
+
+/* ── TASKS ── */
+.task-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden;transition:all .2s}
+.task-item:hover{transform:translateX(3px);box-shadow:var(--shadow)}
+.task-head{padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.task-chevron{color:var(--text3);font-size:.75rem;transition:transform .25s;flex-shrink:0}
+.task-chevron.open{transform:rotate(90deg)}
+.task-name{font-size:.9rem;font-weight:500;flex:1;color:var(--text)}
+.task-name.done{text-decoration:line-through;color:var(--text3)}
+.task-badge{padding:3px 10px;border-radius:99px;font-size:.72rem;font-weight:600}
+.badge-done{background:#dcfce7;color:#15803d}
+.badge-pending{background:#fef3c7;color:#92400e}
+.badge-overdue{background:#fee2e2;color:#991b1b}
+.dark .badge-done{background:#14532d;color:#86efac}
+.dark .badge-pending{background:#451a03;color:#fcd34d}
+.dark .badge-overdue{background:#450a0a;color:#fca5a5}
+.task-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.task-body.open{max-height:200px}
+.task-body-inner{padding:4px 14px 14px 44px;font-size:.83rem;color:var(--text2)}
+.task-actions{display:flex;gap:6px;flex-shrink:0}
+.btn-icon{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;transition:all .15s}
+.btn-icon:hover{border-color:var(--border2);color:var(--text)}
+.btn-icon.danger:hover{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+.btn-icon.success:hover{background:#dcfce7;border-color:#86efac;color:#15803d}
+
+/* ── SCHEDULE ── */
+.schedule-wrap{overflow-x:auto}
+.schedule-table{width:100%;border-collapse:collapse;min-width:750px}
+.schedule-table th{background:var(--primary-dark);color:#fff;padding:10px 8px;font-size:.82rem;font-weight:600;text-align:center}
+.schedule-table td{border:1px solid var(--border);padding:8px;text-align:center;vertical-align:middle;font-size:.8rem;color:var(--text2)}
+.course-cell{background:var(--surface2);border-radius:8px;padding:7px 6px;cursor:pointer;transition:all .2s;border:1px solid var(--border)}
+.course-cell:hover{background:var(--primary);border-color:var(--primary);color:#fff}
+.course-cell strong{display:block;font-size:.8rem;color:inherit}
+.course-cell small{font-size:.72rem;opacity:.8}
+.add-cell{color:var(--text3);cursor:pointer;font-size:.8rem;padding:8px;transition:color .2s}
+.add-cell:hover{color:var(--accent)}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
+  z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+.modal-box{background:var(--surface);border-radius:var(--radius);padding:1.6rem;max-width:420px;width:100%;box-shadow:var(--shadow-md);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+
+/* ── LOGIN ── */
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--primary-deep) 0%,#1e3a5f 50%,#0f2b4a 100%);z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.login-box{background:var(--surface);border-radius:20px;padding:2.2rem 2rem;max-width:390px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center}
+.login-logo{width:60px;height:60px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.5rem;color:#fff;position:relative}
+.login-logo .chad-flag{bottom:-8px;right:-8px}
+
+/* ── TIMER ── */
+.timer-card{background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary-deep) 100%);border-radius:var(--radius);padding:2.5rem;text-align:center;color:#fff}
+.timer-display{font-family:var(--mono);font-size:5rem;font-weight:700;letter-spacing:-.02em;line-height:1;margin-bottom:.5rem;transition:color .3s}
+.timer-display.break{color:#86efac}
+.timer-progress{height:6px;background:rgba(255,255,255,.12);border-radius:99px;margin:1.2rem auto;max-width:300px;overflow:hidden}
+.timer-bar{height:100%;background:linear-gradient(90deg,#3b82f6,#93c5fd);border-radius:99px;transition:width .9s linear}
+.timer-controls{display:flex;justify-content:center;gap:.9rem;margin-top:1.4rem;flex-wrap:wrap}
+.timer-input-row{display:flex;justify-content:center;gap:1.2rem;margin-top:1.2rem;flex-wrap:wrap}
+.timer-input-group label{font-size:.78rem;color:rgba(255,255,255,.6);display:block;margin-bottom:4px}
+.timer-input-group input{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;padding:8px 12px;border-radius:10px;width:90px;text-align:center;font-family:var(--mono);font-size:1.1rem}
+.timer-input-group input:focus{outline:none;border-color:rgba(255,255,255,.5)}
+
+/* ── GRADES ── */
+.grade-item{background:var(--surface2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border)}
+.grade-bar-wrap{height:5px;background:var(--border);border-radius:99px;margin-top:5px;overflow:hidden;width:100%}
+.grade-bar{height:100%;border-radius:99px;transition:width .6s ease}
+
+/* ── TIMELINE ── */
+.timeline{padding-left:8px}
+.tl-item{position:relative;padding-left:24px;padding-bottom:18px;border-left:2px solid var(--border2);margin-left:8px}
+.tl-item:last-child{padding-bottom:0;border-left-color:transparent}
+.tl-dot{position:absolute;left:-7px;top:3px;width:13px;height:13px;border-radius:50%;background:var(--primary);border:2px solid var(--surface);flex-shrink:0}
+.tl-title{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:2px}
+.tl-sub{font-size:.78rem;color:var(--text2)}
+
+/* ── CHARTS ── */
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1rem}
+
+/* ── UTILITIES ── */
+.section-title{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
+.search-wrap{position:relative}
+.search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:.82rem}
+.search-wrap input{padding-left:32px}
+.fade-in{animation:fadeInUp .35s ease both}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.empty-state{text-align:center;padding:2.5rem;color:var(--text3);font-size:.88rem}
+.empty-state i{font-size:2rem;display:block;margin-bottom:.5rem;opacity:.4}
+
+/* ── TOAST ── */
+.toast-container{position:fixed;bottom:1.2rem;right:1.2rem;z-index:4000;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.7rem 1rem;font-size:.84rem;color:var(--text);box-shadow:var(--shadow-md);display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;pointer-events:auto;max-width:320px}
+.toast.success{border-left:3px solid var(--success)}
+.toast.error{border-left:3px solid var(--danger)}
+.toast.info{border-left:3px solid var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(40px)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .sidebar{transform:translateX(calc(-1 * var(--sidebar-w)))}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .sidebar-toggle{left:14px}
+  .sidebar-toggle.sb-collapsed{left:14px}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .timer-display{font-size:3.5rem}
+  .main{padding:.8rem}
+}
+
+/* ── CATEGORY CHIPS ── */
+.chip{padding:3px 9px;border-radius:99px;font-size:.72rem;font-weight:600;display:inline-block}
+.chip-cours{background:#dbeafe;color:#1e40af}
+.chip-révision{background:#f3e8ff;color:#6b21a8}
+.chip-projet{background:#dcfce7;color:#15803d}
+.chip-examen{background:#fee2e2;color:#b91c1c}
+.chip-td{background:#fef3c7;color:#92400e}
+.dark .chip-cours{background:#1e3a5f;color:#93c5fd}
+.dark .chip-révision{background:#3b0764;color:#c4b5fd}
+.dark .chip-projet{background:#14532d;color:#86efac}
+.dark .chip-examen{background:#450a0a;color:#fca5a5}
+.dark .chip-td{background:#451a03;color:#fcd34d}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <i class="fas fa-graduation-cap" style="color:#fff;font-size:1rem"></i>
+        <div class="chad-flag"></div>
+      </div>
+      <div>
+        <div class="logo-title">DOGGOI</div>
+        <div class="logo-sub">Academic Suite · Tchad</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-line"></i><span>Tableau de bord</span></div>
+    <div class="nav-item" data-page="schedule"><i class="fas fa-calendar-alt"></i><span>Emploi du temps</span></div>
+    <div class="nav-item" data-page="tasks"><i class="fas fa-tasks"></i><span>Gestion des tâches</span></div>
+    <div class="nav-item" data-page="exams"><i class="fas fa-graduation-cap"></i><span>Échéances</span></div>
+    <div class="nav-item" data-page="grades"><i class="fas fa-star-half-alt"></i><span>Notes</span></div>
+    <div class="nav-item" data-page="focus"><i class="fas fa-stopwatch"></i><span>Pomodoro</span></div>
+    <div class="nav-item" data-page="analytics"><i class="fas fa-chart-bar"></i><span>Analytiques</span></div>
+  </div>
+  <div class="sidebar-footer">
+    <i class="fas fa-shield-alt"></i> Données locales sécurisées<br>© 2025 DOGGOI Labs
+  </div>
+</nav>
+
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Ouvrir/fermer le menu">
+  <i class="fas fa-bars" style="font-size:.9rem"></i>
+</button>
+
+<!-- MAIN -->
+<main class="main expanded" id="mainContent">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title"><i class="fas fa-graduation-cap" style="margin-right:6px"></i>DOGGOI Academic Suite · Tchad</div>
+      <div class="topbar-sub">Département d'Informatique</div>
+    </div>
+    <div class="topbar-right">
+      <span class="clock-badge" id="clockDisplay">--:--:--</span>
+      <button onclick="toggleDark()" class="btn btn-sm btn-outline-light rounded-pill" style="font-size:.8rem"><i class="fas fa-moon me-1"></i>Mode sombre</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <i class="fas fa-user-circle" style="color:rgba(255,255,255,.7)"></i>
+        <span id="currentUserLabel" style="font-size:.85rem;color:rgba(255,255,255,.85)">Invité</span>
+        <button onclick="logout()" class="btn btn-sm btn-danger rounded-pill ms-1" style="font-size:.78rem">Déconnexion</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN OVERLAY -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-box fade-in">
+      <div class="login-logo"><i class="fas fa-graduation-cap"></i><div class="chad-flag"></div></div>
+      <h3 style="font-weight:700;font-size:1.4rem;margin-bottom:.3rem">DOGGOI</h3>
+      <p style="color:var(--text2);font-size:.85rem;margin-bottom:1.4rem">Connectez-vous à votre espace académique</p>
+      <input type="text" id="loginUser" class="form-field mb-2" placeholder="Nom d'utilisateur" style="border-radius:99px;text-align:center">
+      <input type="password" id="loginPass" class="form-field mb-3" placeholder="Mot de passe" style="border-radius:99px;text-align:center">
+      <button onclick="login()" class="btn-primary-doggoi w-100 py-2" style="font-size:.95rem">Connexion</button>
+      <p style="color:var(--text3);font-size:.75rem;margin-top:1rem">Demo : <strong>admin / admin123</strong> ou <strong>etudiant / etudiant123</strong></p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboardPage" class="fade-in" style="display:none">
+    <div class="page-heading"><h1><i class="fas fa-chart-line" style="color:var(--primary);margin-right:8px"></i>Tableau de bord</h1><p>Bienvenue sur votre plateforme académique</p></div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-layer-group"></i></div><div><div class="stat-num" id="statTotal">0</div><div class="stat-label">Tâches totales</div></div></div>
+      <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-num" id="statDone">0</div><div class="stat-label">Terminées</div></div></div>
+      <div class="stat-card"><div class="stat-icon amber"><i class="fas fa-hourglass-half"></i></div><div><div class="stat-num" id="statPending">0</div><div class="stat-label">En cours</div></div></div>
+      <div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-circle"></i></div><div><div class="stat-num" id="statOverdue">0</div><div class="stat-label">En retard</div></div></div>
+    </div>
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <div class="card"><div class="card-body"><div class="section-title"><i class="fas fa-chart-area" style="color:var(--primary)"></i>Productivité (7 jours)</div><canvas id="productivityChart" height="120"></canvas></div></div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card h-100"><div class="card-body"><div class="section-title"><i class="fas fa-clock" style="color:var(--primary)"></i>Prochaines échéances</div><div id="upcomingList"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div id="schedulePage" style="display:none" class="fade-in">
+    <div class="page-heading"><h1><i class="fas fa-calendar-alt" style="color:var(--primary);margin-right:8px"></i>Emploi du temps</h1><p>Lundi – Dimanche · 07h30 à 17h30</p></div>
+    <div class="card"><div class="card-body">
+      <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.2rem">
+        <button onclick="generateSchedule()" class="btn-primary-doggoi"><i class="fas fa-magic me-1"></i>Générer automatiquement</button>
+        <button onclick="exportSchedulePDF()" class="btn-outline-doggoi"><i class="fas fa-file-pdf me-1"></i>Exporter PDF</button>
+        <button onclick="clearSchedule()" class="btn btn-outline-danger rounded-pill" style="font-size:.85rem;padding:.5rem 1.2rem"><i class="fas fa-trash me-1"></i>Effacer tout</button>
+      </div>
+      <div class="schedule-wrap"><table class="schedule-table" id="scheduleTable">
+        <thead><tr><th style="width:120px">Horaire</th><th>Lundi</th><th>Mardi</th><th>Mercredi</th><th>Jeudi</th><th>Vendredi</th><th>Samedi</th><th>Dimanche</th></tr></thead>
+        <tbody id="scheduleBody"></tbody>
+      </table></div>
+      <p style="font-size:.78rem;color:var(--text3);margin-top:.8rem"><i class="fas fa-info-circle me-1"></i>Cliquez sur une cellule pour ajouter ou modifier un cours</p>
+    </div></div>
+  </div>
+
+  <!-- TASKS -->
+  <div id="tasksPage" style="display:none" class="fade-in">
+    <div class="page-heading"><h1><i class="fas fa-tasks" style="color:var(--primary);margin-right:8px"></i>Gestion des tâches</h1></div>
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="card"><div class="card-body">
+          <div class="section-title"><i class="fas fa-plus-circle" style="color:var(--primary)"></i>Nouvelle tâche</div>
+          <form id="taskForm" novalidate>
+            <input type="text" id="taskTitle" class="form-field mb-2" placeholder="Titre de la tâche *" required>
+            <input type="datetime-local" id="taskDeadline" class="form-field mb-2">
+            <select id="taskCategory" class="form-field mb-3">
+              <option value="Cours">📚 Cours</option>
+              <option value="Révision">🧠 Révision</option>
+              <option value="Projet">💻 Projet</option>
+              <option value="Examen">📝 Examen</option>
+              <option value="TD">📖 TD</option>
+            </select>
+            <button type="submit" class="btn-primary-doggoi w-100"><i class="fas fa-plus me-1"></i>Ajouter la tâche</button>
+          </form>
+        </div></div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card"><div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.7rem;margin-bottom:1rem">
+            <div class="section-title" style="margin:0"><i class="fas fa-list" style="color:var(--primary)"></i>Mes tâches</div>
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="taskSearch" class="form-field" placeholder="Rechercher..." style="width:180px"></div>
+              <button onclick="clearDoneTasks()" class="btn btn-sm btn-outline-danger rounded-pill"><i class="fas fa-broom me-1"></i>Nettoyer</button>
+            </div>
+          </div>
+          <div id="tasksList"></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXAMS -->
+  <div id="examsPage" style="display:none" class="fade-in">
+    <div class="page-heading"><h1><i class="fas fa-graduation-cap" style="color:var(--primary);margin-right:8px"></i>Échéances académiques</h1></div>
+    <div class="card"><div class="card-body">
+      <form id="examForm" novalidate>
+        <div class="row g-2 mb-4">
+          <div class="col-md-4"><input type="text" class="form-field" id="examTitle" placeholder="Nom de l'épreuve *" required></div>
+          <div class="col-md-3"><input type="date" class="form-field" id="examDate" required></div>
+          <div class="col-md-2"><input type="time" class="form-field" id="examTime"></div>
+          <div class="col-md-2"><input type="text" class="form-field" id="examRoom" placeholder="Salle"></div>
+          <div class="col-md-1"><button type="submit" class="btn-primary-doggoi w-100 h-100" style="border-radius:var(--radius-sm)">+</button></div>
+        </div>
+      </form>
+      <div id="examsTimeline"></div>
+    </div></div>
+  </div>
+
+  <!-- GRADES -->
+  <div id="gradesPage" style="display:none" class="fade-in">
+    <div class="page-heading"><h1><i class="fas fa-star-half-alt" style="color:var(--primary);margin-right:8px"></i>Notes & Moyenne</h1></div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-7">
+        <div class="card"><div class="card-body">
+          <div class="section-title"><i class="fas fa-pen" style="color:var(--primary)"></i>Ajouter une note</div>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+            <input type="text" id="gradeCourse" class="form-field" placeholder="Matière" style="flex:1;min-width:140px">
+            <input type="number" id="gradeValue" class="form-field" placeholder="Note /20" step="0.5" min="0" max="20" style="width:110px">
+            <input type="number" id="gradeCoeff" class="form-field" placeholder="Coeff" step="0.5" min="0.5" max="10" value="1" style="width:80px">
+            <button onclick="addGrade()" class="btn-primary-doggoi"><i class="fas fa-plus me-1"></i>Ajouter</button>
+          </div>
+        </div></div>
+      </div>
+      <div class="col-md-5">
+        <div class="card h-100"><div class="card-body" style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-size:.82rem;color:var(--text2);margin-bottom:.3rem">Moyenne Générale Pondérée</div>
+          <div id="avgDisplay" style="font-size:3.5rem;font-weight:700;color:var(--primary);font-family:var(--mono);line-height:1">0.00</div>
+          <div style="font-size:.85rem;color:var(--text3)">/20</div>
+          <div id="avgMention" style="margin-top:.5rem;font-size:.82rem;font-weight:600"></div>
+        </div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-body">
+      <div class="section-title"><i class="fas fa-table" style="color:var(--primary)"></i>Relevé de notes</div>
+      <div id="gradesList"></div>
+    </div></div>
+  </div>
+
+  <!-- FOCUS / POMODORO -->
+  <div id="focusPage" style="display:none" class="fade-in">
+    <div class="page-heading"><h1><i class="fas fa-stopwatch" style="color:var(--primary);margin-right:8px"></i>Mode Pomodoro</h1><p>Gérez vos sessions de concentration</p></div>
+    <div class="timer-card">
+      <div style="font-size:.85rem;color:rgba(255,255,255,.55);margin-bottom:.3rem" id="timerModeLabel">SESSION FOCUS</div>
+      <div class="timer-display" id="timerDisplay">25:00</div>
+      <div class="timer-progress"><div class="timer-bar" id="timerBar" style="width:100%"></div></div>
+      <div style="font-size:.82rem;color:rgba(255,255,255,.5)" id="timerSessionInfo">Session 1 · Prochain : Pause</div>
+      <div class="timer-input-row">
+        <div class="timer-input-group"><label>Focus (min)</label><input type="number" id="focusInput" value="25" min="1" max="180"></div>
+        <div class="timer-input-group"><label>Pause courte (min)</label><input type="number" id="breakInput" value="5" min="1" max="60"></div>
+        <div class="timer-input-group"><label>Grande pause (min)</label><input type="number" id="longBreakInput" value="15" min="5" max="120"></div>
+      </div>
+      <div style="margin-top:.8rem"><button onclick="applyTimerSettings()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 18px;border-radius:99px;cursor:pointer;font-size:.82rem"><i class="fas fa-check me-1"></i>Appliquer</button></div>
+      <div class="timer-controls">
+        <button id="btnStart" onclick="timerStart()" class="btn-primary-doggoi btn-lg"><i class="fas fa-play me-2"></i>Démarrer</button>
+        <button onclick="timerPause()" class="btn btn-outline-light rounded-pill btn-lg">Pause</button>
+        <button onclick="timerReset()" class="btn btn-outline-light rounded-pill btn-lg">Réinitialiser</button>
+      </div>
+      <div style="margin-top:1.2rem;display:flex;justify-content:center;gap:1.5rem;font-size:.82rem;color:rgba(255,255,255,.5)">
+        <span><i class="fas fa-check-circle me-1"></i>Sessions : <strong id="pomodoroCount" style="color:rgba(255,255,255,.8)">0</strong></span>
+        <span><i class="fas fa-clock me-1"></i>Temps focus : <strong id="pomodoroTime" style="color:rgba(255,255,255,.8)">0 min</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="analyticsPage" style="display:none" class="fade-in">
+    <div class="page-heading"><h1><i class="fas fa-chart-bar" style="color:var(--primary);margin-right:8px"></i>Analytiques</h1></div>
+    <div class="charts-grid">
+      <div class="card"><div class="card-body"><div class="section-title"><i class="fas fa-chart-pie" style="color:var(--primary)"></i>Répartition par catégorie</div><canvas id="categoryChart" height="200"></canvas></div></div>
+      <div class="card"><div class="card-body"><div class="section-title"><i class="fas fa-check-double" style="color:var(--primary)"></i>Taux de complétion</div><canvas id="completionChart" height="200"></canvas></div></div>
+    </div>
+    <div class="card"><div class="card-body">
+      <div class="section-title"><i class="fas fa-database" style="color:var(--primary)"></i>Gestion des données</div>
+      <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+        <button onclick="exportJSON()" class="btn-primary-doggoi"><i class="fas fa-download me-1"></i>Exporter JSON</button>
+        <button onclick="importJSON()" class="btn-outline-doggoi"><i class="fas fa-upload me-1"></i>Importer JSON</button>
+        <button onclick="resetData()" class="btn btn-outline-danger rounded-pill" style="font-size:.85rem;padding:.5rem 1.2rem"><i class="fas fa-trash me-1"></i>Réinitialiser</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+    </div></div>
+  </div>
+
+</main>
+
+<!-- MODAL COURSE -->
+<div id="courseModal" class="modal-overlay" style="display:none" onclick="if(event.target===this) closeCourseModal()">
+  <div class="modal-box">
+    <h5 style="font-weight:700;margin-bottom:1.2rem;color:var(--text)" id="modalTitle"><i class="fas fa-book-open me-2" style="color:var(--primary)"></i>Cours</h5>
+    <input type="text" id="modalCourse" class="form-field mb-2" placeholder="Nom du cours">
+    <input type="text" id="modalRoom" class="form-field mb-3" placeholder="Salle / Amphi">
+    <div style="display:flex;justify-content:flex-end;gap:.6rem">
+      <button onclick="closeCourseModal()" class="btn btn-secondary rounded-pill">Annuler</button>
+      <button onclick="saveCourse()" class="btn-primary-doggoi">Enregistrer</button>
+      <button onclick="deleteCourse()" class="btn btn-outline-danger rounded-pill" id="modalDeleteBtn" style="display:none">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ===================================================================
+   DOGGOI v2.0 – Fully rewritten JS (bug-fixed & improved)
+   =================================================================== */
+
+// ── STATE ──────────────────────────────────────────────────────────
+let USER = null;
+let tasks = [], exams = [], schedule = {}, grades = [];
+let openTaskId = null;
+let modalDay = null, modalHour = null;
+
+// Charts registry – properly destroyed before re-creating
+const charts = {};
+
+// Pomodoro state
+let pomodoroState = {
+  focusMins: 25, breakMins: 5, longBreakMins: 15,
+  interval: null, secondsLeft: 25*60, totalSeconds: 25*60,
+  isFocus: true, session: 1, sessionsCompleted: 0, totalFocusMin: 0
+};
+
+// ── STORAGE HELPERS ────────────────────────────────────────────────
+function sk(k){ return `doggoi_${USER}_${k}`; }
+function ls_get(k, def=null){
+  try{ const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : def; }
+  catch{ return def; }
+}
+function ls_set(k, v){
+  try{ localStorage.setItem(k, JSON.stringify(v)); return true; }
+  catch(e){ toast('Erreur sauvegarde (stockage plein ?)', 'error'); return false; }
+}
+
+function saveAll(){
+  if(!USER) return;
+  ls_set(sk('tasks'), tasks);
+  ls_set(sk('exams'), exams);
+  ls_set(sk('schedule'), schedule);
+  ls_set(sk('grades'), grades);
+}
+
+function loadAll(){
+  tasks   = ls_get(sk('tasks'), []);
+  exams   = ls_get(sk('exams'), []);
+  schedule= ls_get(sk('schedule'), {});
+  grades  = ls_get(sk('grades'), []);
+
+  // Seed demo data
+  if(tasks.length === 0){
+    tasks = [
+      {id:1, title:'Préparation mémoire', deadline:futureDate(5,14), category:'Projet', completed:false, createdAt:Date.now()-86400000*3},
+      {id:2, title:'Révision algorithmique', deadline:futureDate(7,10), category:'Révision', completed:false, createdAt:Date.now()-86400000*2},
+      {id:3, title:'TP Bases de données', deadline:futureDate(2,9), category:'TD', completed:true, createdAt:Date.now()-86400000*1},
+    ];
+  }
+  if(grades.length === 0){
+    grades = [
+      {id:1, course:'Algorithmique', grade:15, coeff:3},
+      {id:2, course:'Base de données', grade:14, coeff:2},
+      {id:3, course:'Réseaux', grade:16, coeff:2},
+    ];
+  }
+  saveAll();
+}
+
+function futureDate(days, hour=18){
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  d.setHours(hour, 0, 0, 0);
+  return d.toISOString().slice(0,16);
+}
+
+// ── AUTH ───────────────────────────────────────────────────────────
+const USERS = { admin:'admin123', etudiant:'etudiant123' };
+
+function login(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if(!u || !p){ toast('Renseignez vos identifiants', 'error'); return; }
+  if(USERS[u] !== p){ toast('Identifiants incorrects', 'error'); return; }
+  USER = u;
+  ls_set('doggoi_current_user', u);
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('currentUserLabel').textContent = u;
+  loadAll();
+  renderAll();
+  navigateTo('dashboard');
+  toast(`Bienvenue, ${u} !`, 'success');
+}
+
+function logout(){
+  pomodoroStop();
+  USER = null;
+  ls_set('doggoi_current_user', null);
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('currentUserLabel').textContent = 'Invité';
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────
+function navigateTo(page){
+  document.querySelectorAll('[id$="Page"]').forEach(el => el.style.display = 'none');
+  const el = document.getElementById(page+'Page');
+  if(el){ el.style.display = 'block'; el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  // Rebuild charts when switching to analytics/dashboard
+  if(page === 'analytics' || page === 'dashboard') setTimeout(renderCharts, 50);
+}
+
+document.querySelectorAll('.nav-item').forEach(n =>
+  n.addEventListener('click', () => { navigateTo(n.dataset.page); closeSidebarOnMobile(); })
+);
+
+function closeSidebarOnMobile(){
+  if(window.innerWidth <= 1024){
+    document.getElementById('sidebar').classList.remove('open');
+  }
+}
+
+// ── SIDEBAR TOGGLE ─────────────────────────────────────────────────
+const sidebar = document.getElementById('sidebar');
+const mainEl  = document.getElementById('mainContent');
+const toggleBtn = document.getElementById('sidebarToggle');
+let sidebarOpen = window.innerWidth > 1024;
+
+function updateSidebar(){
+  if(window.innerWidth > 1024){
+    // Desktop mode
+    if(sidebarOpen){
+      sidebar.classList.remove('collapsed');
+      mainEl.style.marginLeft = 'var(--sidebar-w)';
+      toggleBtn.style.left = 'calc(var(--sidebar-w) + 12px)';
+    } else {
+      sidebar.classList.add('collapsed');
+      mainEl.style.marginLeft = '0';
+      toggleBtn.style.left = '14px';
+    }
+  } else {
+    // Mobile mode – sidebar overlays
+    mainEl.style.marginLeft = '0';
+    toggleBtn.style.left = '14px';
+  }
+}
+
+toggleBtn.addEventListener('click', () => {
+  if(window.innerWidth > 1024){
+    sidebarOpen = !sidebarOpen;
+  } else {
+    sidebar.classList.toggle('open');
+  }
+  updateSidebar();
+});
+
+window.addEventListener('resize', updateSidebar);
+updateSidebar();
+
+// ── CLOCK & DEADLINE CHECKER ───────────────────────────────────────
+let lastDeadlineCheck = 0;
+setInterval(() => {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent =
+    now.toLocaleString('fr-FR', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  // Check deadlines once per minute
+  if(USER && now.getTime() - lastDeadlineCheck > 60000){
+    lastDeadlineCheck = now.getTime();
+    checkDeadlines();
+  }
+}, 1000);
+
+function checkDeadlines(){
+  const now = Date.now();
+  tasks.forEach(t => {
+    if(!t.completed && t.deadline){
+      const diff = new Date(t.deadline).getTime() - now;
+      if(diff > 0 && diff < 86400000 && !t._notified24h){
+        t._notified24h = true;
+        toast(`⏰ "${t.title}" : échéance dans moins de 24h !`, 'info');
+        beep();
+      }
+    }
+  });
+  saveAll();
+}
+
+// ── TASKS ──────────────────────────────────────────────────────────
+document.getElementById('taskForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title    = document.getElementById('taskTitle').value.trim();
+  const deadline = document.getElementById('taskDeadline').value;
+  const category = document.getElementById('taskCategory').value;
+  if(!title){ toast('Saisissez un titre', 'error'); return; }
+  tasks.unshift({ id: Date.now(), title, deadline, category, completed:false, createdAt:Date.now() });
+  saveAll(); renderAll();
+  document.getElementById('taskForm').reset();
+  toast('Tâche ajoutée !', 'success');
+});
+
+document.getElementById('taskSearch').addEventListener('input', renderTasks);
+
+function renderTasks(){
+  const search = document.getElementById('taskSearch').value.toLowerCase();
+  const list   = document.getElementById('tasksList');
+  if(!list) return;
+  const filtered = search ? tasks.filter(t => t.title.toLowerCase().includes(search) || t.category.toLowerCase().includes(search)) : tasks;
+  if(filtered.length === 0){ list.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i>Aucune tâche</div>'; return; }
+  list.innerHTML = filtered.map(t => {
+    const now      = Date.now();
+    const overdue  = !t.completed && t.deadline && new Date(t.deadline).getTime() < now;
+    const badge    = t.completed ? 'done' : (overdue ? 'overdue' : 'pending');
+    const badgeTxt = t.completed ? '✓ Terminée' : (overdue ? '⚠ En retard' : '⏳ En cours');
+    return `<div class="task-item">
+      <div class="task-head" onclick="toggleTask(${t.id})">
+        <i class="fas fa-chevron-right task-chevron${openTaskId===t.id?' open':''}"></i>
+        <span class="task-name${t.completed?' done':''}">${esc(t.title)}</span>
+        <span class="task-badge badge-${badge}">${badgeTxt}</span>
+        <div class="task-actions" onclick="event.stopPropagation()">
+          <button class="btn-icon success" title="${t.completed?'Rouvrir':'Terminer'}" onclick="toggleTaskDone(${t.id})"><i class="fas ${t.completed?'fa-undo':'fa-check'}"></i></button>
+          <button class="btn-icon danger" title="Supprimer" onclick="deleteTask(${t.id})"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      <div class="task-body${openTaskId===t.id?' open':''}">
+        <div class="task-body-inner">
+          ${t.deadline?`<div><i class="far fa-calendar me-1" style="color:var(--text3)"></i>${fmtDate(t.deadline)}</div>`:'<div style="color:var(--text3)">Pas d\'échéance définie</div>'}
+          <div style="margin-top:5px"><span class="chip chip-${t.category.toLowerCase()}">${t.category}</span></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTask(id){ openTaskId = openTaskId === id ? null : id; renderTasks(); }
+function toggleTaskDone(id){ const t=tasks.find(x=>x.id===id); if(t){ t.completed=!t.completed; saveAll(); renderAll(); toast(t.completed?'Tâche terminée !':'Tâche réouverte','info'); } }
+function deleteTask(id){ if(!confirm('Supprimer cette tâche ?')) return; tasks=tasks.filter(t=>t.id!==id); if(openTaskId===id) openTaskId=null; saveAll(); renderAll(); toast('Tâche supprimée','info'); }
+function clearDoneTasks(){ if(!confirm('Supprimer toutes les tâches terminées ?')) return; const n=tasks.filter(t=>t.completed).length; tasks=tasks.filter(t=>!t.completed); saveAll(); renderAll(); toast(`${n} tâche(s) supprimée(s)`,'success'); }
+
+// ── SCHEDULE ───────────────────────────────────────────────────────
+const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const HOURS = ['07:30-09:30','09:30-11:30','11:30-13:30','13:30-15:30','15:30-17:30'];
+const ROOMS = {Cours:'Amphi A',Révision:'Salle 204',Projet:'Lab Info',Examen:'Amphi B',TD:'Salle TD12'};
+
+function renderSchedule(){
+  const tbody = document.getElementById('scheduleBody');
+  if(!tbody) return;
+  tbody.innerHTML = HOURS.map(h =>
+    `<tr><td style="font-weight:600;font-size:.78rem;white-space:nowrap;background:var(--surface2);color:var(--text)">${h}</td>` +
+    DAYS.map(d => {
+      const key = `${d}_${h}`;
+      const c   = schedule[key];
+      return `<td>${c
+        ? `<div class="course-cell" onclick="openCourseModal('${d}','${h}')"><strong>${esc(c.title)}</strong><br><small>${c.room||''}</small></div>`
+        : `<span class="add-cell" onclick="openCourseModal('${d}','${h}')">+ Ajouter</span>`}</td>`;
+    }).join('') + '</tr>'
+  ).join('');
+}
+
+function generateSchedule(){
+  const pending = tasks.filter(t=>!t.completed);
+  if(pending.length===0){ toast('Aucune tâche en cours. Ajoutez des tâches d\'abord !','error'); return; }
+  const sorted = [...pending].sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+  schedule = {};
+  let i = 0;
+  outer: for(const h of HOURS){ for(const d of DAYS){ if(i>=sorted.length) break outer; const t=sorted[i++]; schedule[`${d}_${h}`]={title:t.title.substring(0,30),room:ROOMS[t.category]||'DOGGOI'}; } }
+  saveAll(); renderSchedule();
+  toast(`Emploi du temps généré – ${i} créneaux planifiés`,'success');
+}
+
+function clearSchedule(){ if(!confirm('Effacer tout l\'emploi du temps ?')) return; schedule={}; saveAll(); renderSchedule(); toast('Emploi du temps effacé','info'); }
+
+// Course modal
+function openCourseModal(day, hour){
+  modalDay=day; modalHour=hour;
+  const existing = schedule[`${day}_${hour}`];
+  document.getElementById('modalTitle').innerHTML = `<i class="fas fa-book-open me-2" style="color:var(--primary)"></i>${day} · ${hour}`;
+  document.getElementById('modalCourse').value = existing?.title||'';
+  document.getElementById('modalRoom').value   = existing?.room||'';
+  document.getElementById('modalDeleteBtn').style.display = existing ? 'inline-block' : 'none';
+  document.getElementById('courseModal').style.display = 'flex';
+  setTimeout(()=>document.getElementById('modalCourse').focus(),100);
+}
+function closeCourseModal(){ document.getElementById('courseModal').style.display='none'; modalDay=null; modalHour=null; }
+function saveCourse(){
+  const title = document.getElementById('modalCourse').value.trim();
+  const room  = document.getElementById('modalRoom').value.trim();
+  if(!title){ toast('Saisissez un nom de cours','error'); return; }
+  if(modalDay && modalHour){ schedule[`${modalDay}_${modalHour}`]={title,room}; saveAll(); renderSchedule(); toast('Cours enregistré','success'); }
+  closeCourseModal();
+}
+function deleteCourse(){
+  if(modalDay && modalHour){ delete schedule[`${modalDay}_${modalHour}`]; saveAll(); renderSchedule(); toast('Cours supprimé','info'); }
+  closeCourseModal();
+}
+
+async function exportSchedulePDF(){
+  const btn = document.querySelector('[onclick="exportSchedulePDF()"]');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Génération...';
+  btn.disabled = true;
+  try{
+    const container = document.getElementById('scheduleTable');
+    const canvas = await html2canvas(container, {scale:2, backgroundColor: document.body.classList.contains('dark')?'#161b22':'#ffffff'});
+    const {jsPDF} = window.jspdf;
+    const pdf = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const iw=280, ih=(canvas.height*iw)/canvas.width;
+    pdf.setFontSize(14); pdf.text('DOGGOI - Emploi du temps',148,8,{align:'center'});
+    pdf.addImage(canvas.toDataURL('image/png'),'PNG',5,12,iw,Math.min(ih,180));
+    pdf.save(`DOGGOI_EDT_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.pdf`);
+    toast('PDF exporté avec succès !','success');
+  } catch(e){ console.error(e); toast('Erreur lors de l\'export PDF','error'); }
+  finally{ btn.innerHTML=orig; btn.disabled=false; }
+}
+
+// ── EXAMS ──────────────────────────────────────────────────────────
+document.getElementById('examForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title = document.getElementById('examTitle').value.trim();
+  const date  = document.getElementById('examDate').value;
+  if(!title||!date){ toast('Nom et date requis','error'); return; }
+  exams.push({ id:Date.now(), title, date, time:document.getElementById('examTime').value, room:document.getElementById('examRoom').value });
+  saveAll(); renderExams();
+  document.getElementById('examForm').reset();
+  toast('Épreuve ajoutée','success');
+});
+
+function renderExams(){
+  const c = document.getElementById('examsTimeline');
+  if(!c) return;
+  if(exams.length===0){ c.innerHTML='<div class="empty-state"><i class="fas fa-calendar-times"></i>Aucune épreuve</div>'; return; }
+  const sorted = [...exams].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const now = new Date().toISOString().slice(0,10);
+  c.innerHTML = '<div class="timeline">' + sorted.map(e => {
+    const passed = e.date < now;
+    const color  = passed ? 'var(--text3)' : (e.date === now ? 'var(--danger)' : 'var(--primary)');
+    return `<div class="tl-item">
+      <div class="tl-dot" style="background:${color}"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="tl-title" style="color:${passed?'var(--text3)':'var(--text)'}">📚 ${esc(e.title)}</div>
+          <div class="tl-sub"><i class="far fa-calendar me-1"></i>${fmtDateOnly(e.date)}${e.time?' à '+e.time:''} ${e.room?'· '+e.room:''}</div>
+        </div>
+        <button class="btn-icon danger" onclick="deleteExam(${e.id})"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function deleteExam(id){ exams=exams.filter(e=>e.id!==id); saveAll(); renderExams(); toast('Épreuve supprimée','info'); }
+
+// ── GRADES ─────────────────────────────────────────────────────────
+function addGrade(){
+  const course = document.getElementById('gradeCourse').value.trim();
+  const grade  = parseFloat(document.getElementById('gradeValue').value);
+  const coeff  = parseFloat(document.getElementById('gradeCoeff').value) || 1;
+  if(!course){ toast('Saisissez le nom de la matière','error'); return; }
+  if(isNaN(grade)||grade<0||grade>20){ toast('Note invalide (0–20)','error'); return; }
+  if(isNaN(coeff)||coeff<=0){ toast('Coefficient invalide','error'); return; }
+  grades.push({id:Date.now(), course, grade, coeff});
+  saveAll(); renderGrades();
+  document.getElementById('gradeCourse').value='';
+  document.getElementById('gradeValue').value='';
+  document.getElementById('gradeCoeff').value='1';
+  toast('Note ajoutée','success');
+}
+
+function deleteGrade(id){ grades=grades.filter(g=>g.id!==id); saveAll(); renderGrades(); }
+
+function calcAverage(){
+  if(grades.length===0) return 0;
+  let sumPts=0, sumCoeff=0;
+  grades.forEach(g=>{ sumPts+=g.grade*(g.coeff||1); sumCoeff+=(g.coeff||1); });
+  return sumCoeff>0 ? sumPts/sumCoeff : 0;
+}
+
+function getMention(avg){
+  if(avg>=16) return {txt:'Très Bien 🏅',color:'#15803d'};
+  if(avg>=14) return {txt:'Bien 🎉',color:'#1d4ed8'};
+  if(avg>=12) return {txt:'Assez Bien',color:'#b45309'};
+  if(avg>=10) return {txt:'Passable',color:'#b45309'};
+  return {txt:'Insuffisant',color:'#b91c1c'};
+}
+
+function renderGrades(){
+  const c = document.getElementById('gradesList');
+  const avgEl = document.getElementById('avgDisplay');
+  const mentionEl = document.getElementById('avgMention');
+  if(!c) return;
+  const avg = calcAverage();
+  if(avgEl) avgEl.textContent = avg.toFixed(2);
+  if(mentionEl){ const m=getMention(avg); mentionEl.textContent=m.txt; mentionEl.style.color=m.color; }
+  if(grades.length===0){ c.innerHTML='<div class="empty-state"><i class="fas fa-star"></i>Aucune note saisie</div>'; return; }
+  c.innerHTML = grades.map(g => {
+    const pct = (g.grade/20)*100;
+    const col = g.grade>=14?'#16a34a':g.grade>=10?'#d97706':'#dc2626';
+    return `<div class="grade-item">
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong style="font-size:.9rem">${esc(g.course)}</strong>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:.8rem;color:var(--text3)">Coeff.${g.coeff||1}</span>
+            <span style="font-size:1rem;font-weight:700;color:${col};font-family:var(--mono)">${g.grade}/20</span>
+            <button class="btn-icon danger" onclick="deleteGrade(${g.id})"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="grade-bar-wrap"><div class="grade-bar" style="width:${pct}%;background:${col}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── POMODORO ───────────────────────────────────────────────────────
+function applyTimerSettings(){
+  const f = parseInt(document.getElementById('focusInput').value)||25;
+  const b = parseInt(document.getElementById('breakInput').value)||5;
+  const l = parseInt(document.getElementById('longBreakInput').value)||15;
+  if(f<1||f>180||b<1||b>60||l<5||l>120){ toast('Valeurs hors limites','error'); return; }
+  pomodoroStop();
+  pomodoroState.focusMins=f; pomodoroState.breakMins=b; pomodoroState.longBreakMins=l;
+  pomodoroState.isFocus=true; pomodoroState.session=1;
+  pomodoroState.secondsLeft=f*60; pomodoroState.totalSeconds=f*60;
+  ls_set('doggoi_pomodoro_settings',{f,b,l});
+  updateTimerUI(); toast(`Paramètres appliqués : Focus ${f}min, Pause ${b}min, Grande pause ${l}min`,'success');
+}
+
+function loadTimerSettings(){
+  const s = ls_get('doggoi_pomodoro_settings',null);
+  if(s){ pomodoroState.focusMins=s.f||25; pomodoroState.breakMins=s.b||5; pomodoroState.longBreakMins=s.l||15; }
+  pomodoroState.secondsLeft = pomodoroState.focusMins*60;
+  pomodoroState.totalSeconds = pomodoroState.focusMins*60;
+  if(document.getElementById('focusInput')) document.getElementById('focusInput').value = pomodoroState.focusMins;
+  if(document.getElementById('breakInput')) document.getElementById('breakInput').value = pomodoroState.breakMins;
+  if(document.getElementById('longBreakInput')) document.getElementById('longBreakInput').value = pomodoroState.longBreakMins;
+  updateTimerUI();
+}
+
+function timerStart(){
+  if(pomodoroState.interval) return;
+  document.getElementById('btnStart').innerHTML='<i class="fas fa-running me-2"></i>En cours...';
+  pomodoroState.interval = setInterval(pomodoroTick, 1000);
+}
+
+function pomodoroTick(){
+  pomodoroState.secondsLeft--;
+  if(pomodoroState.secondsLeft <= 0){ pomodoroSessionEnd(); return; }
+  updateTimerUI();
+}
+
+function pomodoroSessionEnd(){
+  clearInterval(pomodoroState.interval); pomodoroState.interval=null;
+  beep();
+  if(pomodoroState.isFocus){
+    pomodoroState.sessionsCompleted++;
+    pomodoroState.totalFocusMin += pomodoroState.focusMins;
+    const isLong = pomodoroState.sessionsCompleted % 4 === 0;
+    const breakMins = isLong ? pomodoroState.longBreakMins : pomodoroState.breakMins;
+    pomodoroState.isFocus=false;
+    pomodoroState.secondsLeft=breakMins*60; pomodoroState.totalSeconds=breakMins*60;
+    toast(`🍅 Session ${pomodoroState.sessionsCompleted} terminée ! ${isLong?'Grande pause':'Pause courte'} de ${breakMins} min.`,'success');
+  } else {
+    pomodoroState.isFocus=true; pomodoroState.session++;
+    pomodoroState.secondsLeft=pomodoroState.focusMins*60; pomodoroState.totalSeconds=pomodoroState.focusMins*60;
+    toast('☕ Pause terminée ! Reprise du focus.','info');
+  }
+  updateTimerUI();
+  pomodoroState.interval = setInterval(pomodoroTick,1000);
+}
+
+function timerPause(){
+  if(pomodoroState.interval){ clearInterval(pomodoroState.interval); pomodoroState.interval=null; document.getElementById('btnStart').innerHTML='<i class="fas fa-play me-2"></i>Reprendre'; } else timerStart();
+}
+
+function timerReset(){
+  pomodoroStop();
+  pomodoroState.isFocus=true; pomodoroState.session=1;
+  pomodoroState.secondsLeft=pomodoroState.focusMins*60; pomodoroState.totalSeconds=pomodoroState.focusMins*60;
+  updateTimerUI();
+  document.getElementById('btnStart').innerHTML='<i class="fas fa-play me-2"></i>Démarrer';
+}
+
+function pomodoroStop(){ if(pomodoroState.interval){ clearInterval(pomodoroState.interval); pomodoroState.interval=null; } }
+
+function updateTimerUI(){
+  const m = Math.floor(pomodoroState.secondsLeft/60);
+  const s = pomodoroState.secondsLeft%60;
+  const disp = document.getElementById('timerDisplay');
+  if(disp){ disp.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; disp.className='timer-display'+(pomodoroState.isFocus?'':' break'); }
+  const bar = document.getElementById('timerBar');
+  if(bar){ const pct = pomodoroState.totalSeconds>0?(pomodoroState.secondsLeft/pomodoroState.totalSeconds*100):100; bar.style.width=pct.toFixed(1)+'%'; }
+  const lbl = document.getElementById('timerModeLabel');
+  if(lbl) lbl.textContent = pomodoroState.isFocus?'SESSION FOCUS':'PAUSE';
+  const info = document.getElementById('timerSessionInfo');
+  if(info) info.textContent=`Session ${pomodoroState.session} · ${pomodoroState.isFocus?'Prochain : Pause':'Prochain : Focus'}`;
+  const cnt = document.getElementById('pomodoroCount');
+  if(cnt) cnt.textContent = pomodoroState.sessionsCompleted;
+  const tim = document.getElementById('pomodoroTime');
+  if(tim) tim.textContent = pomodoroState.totalFocusMin+' min';
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────
+function renderStats(){
+  const now = Date.now();
+  const total=tasks.length, done=tasks.filter(t=>t.completed).length;
+  const pending=tasks.filter(t=>!t.completed).length;
+  const overdue=tasks.filter(t=>!t.completed&&t.deadline&&new Date(t.deadline).getTime()<now).length;
+  setText('statTotal',total); setText('statDone',done); setText('statPending',pending); setText('statOverdue',overdue);
+}
+
+function renderUpcoming(){
+  const el = document.getElementById('upcomingList');
+  if(!el) return;
+  const upcoming = tasks.filter(t=>!t.completed&&t.deadline).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).slice(0,5);
+  if(upcoming.length===0){ el.innerHTML='<div class="empty-state" style="padding:1rem"><i class="fas fa-check"></i>Tout est à jour !</div>'; return; }
+  el.innerHTML = '<div class="timeline">' + upcoming.map(t=>`<div class="tl-item"><div class="tl-dot"></div><div class="tl-title">${esc(t.title)}</div><div class="tl-sub">${fmtDate(t.deadline)}</div></div>`).join('') + '</div>';
+}
+
+// ── CHARTS ────────────────────────────────────────────────────────
+function destroyChart(id){ if(charts[id]){ try{ charts[id].destroy(); }catch(e){} delete charts[id]; } }
+
+function renderCharts(){
+  const isDark = document.body.classList.contains('dark');
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const gridColor = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+
+  // Productivity chart (dashboard)
+  const ctx3 = document.getElementById('productivityChart');
+  if(ctx3){
+    destroyChart('productivity');
+    const last7 = [];
+    for(let i=6;i>=0;i--){
+      const d=new Date(); d.setDate(d.getDate()-i);
+      const ds=d.toISOString().slice(0,10);
+      last7.push(tasks.filter(t=>t.completed&&new Date(t.createdAt).toISOString().slice(0,10)===ds).length);
+    }
+    charts['productivity'] = new Chart(ctx3,{type:'line',data:{labels:['J-6','J-5','J-4','J-3','J-2','Hier','Aujourd\'hui'],datasets:[{label:'Tâches',data:last7,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.1)',tension:.4,fill:true,pointBackgroundColor:'#3b82f6',pointRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:textColor},grid:{color:gridColor}},y:{ticks:{color:textColor,stepSize:1},grid:{color:gridColor}}}}});
+  }
+
+  // Category chart
+  const ctx1 = document.getElementById('categoryChart');
+  if(ctx1){
+    destroyChart('category');
+    const cats=['Cours','Révision','Projet','Examen','TD'];
+    const counts=cats.map(c=>tasks.filter(t=>t.category===c).length);
+    charts['category']=new Chart(ctx1,{type:'doughnut',data:{labels:cats,datasets:[{data:counts,backgroundColor:['#3b82f6','#8b5cf6','#16a34a','#dc2626','#d97706'],borderWidth:2,borderColor:isDark?'#161b22':'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:textColor,font:{size:12},padding:12}}}}});
+  }
+
+  // Completion chart
+  const ctx2 = document.getElementById('completionChart');
+  if(ctx2){
+    destroyChart('completion');
+    const done=tasks.filter(t=>t.completed).length, pend=tasks.length-done;
+    charts['completion']=new Chart(ctx2,{type:'pie',data:{labels:['Terminées','En cours'],datasets:[{data:[done,pend],backgroundColor:['#16a34a','#f59e0b'],borderWidth:2,borderColor:isDark?'#161b22':'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:textColor,font:{size:12},padding:12}}}}});
+  }
+}
+
+// ── DATA EXPORT / IMPORT ───────────────────────────────────────────
+function exportJSON(){
+  const data={version:'2.0',exportedAt:new Date().toISOString(),tasks,exams,schedule,grades};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`DOGGOI_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url);
+  toast('Données exportées','success');
+}
+
+function importJSON(){ document.getElementById('importFile').click(); }
+
+function handleImport(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!confirm('Remplacer toutes vos données actuelles ?')) return;
+      if(data.tasks) tasks=data.tasks;
+      if(data.exams) exams=data.exams;
+      if(data.schedule) schedule=data.schedule;
+      if(data.grades) grades=data.grades;
+      saveAll(); renderAll();
+      toast('Données importées avec succès !','success');
+    } catch{ toast('Fichier JSON invalide','error'); }
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function resetData(){
+  if(!confirm('⚠️ Réinitialisation complète ? Cette action est irréversible.')) return;
+  tasks=[]; exams=[]; schedule={}; grades=[];
+  saveAll(); loadAll(); renderAll();
+  toast('Données réinitialisées','info');
+}
+
+// ── RENDER ALL ─────────────────────────────────────────────────────
+function renderAll(){
+  if(!USER) return;
+  renderStats();
+  renderTasks();
+  renderUpcoming();
+  renderExams();
+  renderSchedule();
+  renderGrades();
+  renderCharts();
+}
+
+// ── DARK MODE ─────────────────────────────────────────────────────
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  ls_set('doggoi_dark', document.body.classList.contains('dark'));
+  renderCharts(); // rebuild with correct colors
+}
+
+// ── TOAST NOTIFICATIONS ────────────────────────────────────────────
+function toast(msg, type='info', duration=3500){
+  const container = document.getElementById('toastContainer');
+  const icons = {success:'fa-check-circle',error:'fa-exclamation-circle',info:'fa-info-circle'};
+  const el = document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<i class="fas ${icons[type]||icons.info}" style="font-size:.9rem;color:${type==='success'?'var(--success)':type==='error'?'var(--danger)':'var(--accent)'}"></i><span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(()=>{ el.style.animation='toastOut .3s ease forwards'; setTimeout(()=>el.remove(),300); }, duration);
+}
+
+// ── AUDIO BEEP ─────────────────────────────────────────────────────
+function beep(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=880; o.type='sine';
+    g.gain.setValueAtTime(.3,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.6);
+    o.start(); o.stop(ctx.currentTime+.6);
+    setTimeout(()=>ctx.close(),700);
+  } catch(e){}
+}
+
+// ── UTILITIES ──────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function setText(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+
+function fmtDate(d){
+  if(!d) return 'Non définie';
+  try{ return new Date(d).toLocaleString('fr-FR',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  catch{ return d; }
+}
+function fmtDateOnly(d){
+  if(!d) return '';
+  try{ return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
+  catch{ return d; }
+}
+
+// ── INIT ───────────────────────────────────────────────────────────
+if(ls_get('doggoi_dark')) document.body.classList.add('dark');
+
+const savedUser = ls_get('doggoi_current_user');
+if(savedUser && USERS[savedUser]){
+  USER = savedUser;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('currentUserLabel').textContent = USER;
+  loadAll();
+  loadTimerSettings();
+  renderAll();
+  navigateTo('dashboard');
+} else {
+  loadTimerSettings();
+}
+
+// Enter key on login form
+document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
+</script>
+</body>
+</html>
